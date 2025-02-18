@@ -15,9 +15,14 @@ import androidx.core.view.WindowInsetsCompat
 import com.dwp.numbermemory.components.DigitTileComponent
 import com.dwp.numbermemory.components.HorizontalLayoutOfDigitTiles
 import com.dwp.numbermemory.components.MyScreen
+import com.dwp.numbermemory.components.NumberMemoryViewModel
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val model = NumberMemoryViewModel()
+        val randomDigits = RandomNumberGeneratorHelper().getRandomString(6)
+        model.updateDigits(randomDigits.map { it.toString().toInt() });
+
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets -> insets }
@@ -31,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        MyScreen()
+                        MyScreen(model = model)
                     }
 
                     }

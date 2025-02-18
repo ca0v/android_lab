@@ -10,8 +10,15 @@ class NumberMemoryViewModel {
     var digits: List<Int> by mutableStateOf(emptyList())
         private set
 
+    var tryAgainVisibility by mutableStateOf(false)
+        private set
+
     fun updateDigits(newDigits: List<Int>) {
         digits = newDigits
+    }
+
+    fun setTryAgainVisible(visible: Boolean) {
+        tryAgainVisibility = visible
     }
 }
 
