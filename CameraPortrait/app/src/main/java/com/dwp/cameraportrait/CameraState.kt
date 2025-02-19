@@ -10,6 +10,8 @@ import androidx.core.content.ContextCompat
 
 class CameraState(zoomLevel: Float = 0f) {
     lateinit var imageCapture: ImageCapture
+    lateinit var contentResolver: android.content.ContentResolver
+
     var camera by mutableStateOf<androidx.camera.core.Camera?>(null)
 
     var zoomLevel by mutableFloatStateOf(zoomLevel)
