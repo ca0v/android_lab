@@ -7,11 +7,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
+import androidx.camera.core.ZoomState
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,18 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 
 @Composable
-fun CameraComponent(modifier: Modifier = Modifier) {
+fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
     val context = LocalContext.current
     val cameraPermission = Manifest.permission.CAMERA
     var hasCameraPermission by remember { mutableStateOf(false) }
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     var isCameraInitializing by remember { mutableStateOf(true) }
+    var camera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) } // Keep reference to camera
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -54,20 +53,21 @@ fun CameraComponent(modifier: Modifier = Modifier) {
         if (hasCameraPermission) {
             val activity = context as? ComponentActivity ?: return@Column
 
-            LaunchedEffect(key1 = previewView) { // Recompose when previewView changes
+            LaunchedEffect(key1 = previewView) { // Initialize camera
                 try {
                     if (previewView == null) {
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
                         cameraProviderFuture.addListener({
                             val cameraProvider = cameraProviderFuture.get()
-                            previewView = PreviewView(context)
+                            val currentPreviewView = PreviewView(context)
+                            previewView = currentPreviewView
                             val preview = Preview.Builder()
                                 .build()
                                 .also {
-                                    it.surfaceProvider = previewView!!.surfaceProvider
+                                    it.surfaceProvider = currentPreviewView.surfaceProvider
                                 }
                             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                            cameraProvider.bindToLifecycle(
+                            camera = cameraProvider.bindToLifecycle(
                                 activity,
                                 cameraSelector,
                                 preview
@@ -78,6 +78,20 @@ fun CameraComponent(modifier: Modifier = Modifier) {
                 } catch (e: Exception) {
                     Log.e("CameraComponent", "Error initializing camera", e)
                     isCameraInitializing = false // Stop loading in case of error
+                }
+            }
+
+            // Update zoom when zoomLevel changes
+            LaunchedEffect(state.zoomLevel) {
+                camera?.let { cam ->
+                    val zoomState = cam.cameraInfo.zoomState.value
+                    zoomState?.let {
+                        val maxZoomRatio = it.maxZoomRatio
+                        val minZoomRatio = it.minZoomRatio
+                        val calculatedZoomRatio = (minZoomRatio + (maxZoomRatio - minZoomRatio) * state.zoomLevel)
+
+                        cam.cameraControl.setZoomRatio(calculatedZoomRatio)
+                    }
                 }
             }
 

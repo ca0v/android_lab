@@ -42,13 +42,14 @@ class MainActivity : ComponentActivity() {
                         )
                         {
                             CameraComponent(
-                                Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                state = cameraState,
                             )
                         }
                         ZoomControls(
                             cameraState = cameraState,
-                            onZoomIn = { cameraState = cameraState.zoomIn() },
-                            onZoomOut = { cameraState = cameraState.zoomOut() }
+                            onZoomIn = { cameraState.zoomIn() },
+                            onZoomOut = { cameraState.zoomOut() }
                         )
                     }
                 }
