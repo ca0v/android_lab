@@ -3,9 +3,13 @@ package com.dwp.cameraportrait
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 
-class CameraState(zoomLevel: Float = 0.5f) {
+class CameraState(zoomLevel: Float = 0f) {
+    var camera by mutableStateOf<androidx.camera.core.Camera?>(null)
+
     var zoomLevel by mutableFloatStateOf(zoomLevel)
         private set
     fun zoomIn() {
@@ -13,6 +17,6 @@ class CameraState(zoomLevel: Float = 0.5f) {
     }
 
     fun zoomOut() {
-        zoomLevel = (zoomLevel - 0.1f).coerceAtLeast(0.1f)
+        zoomLevel = (zoomLevel - 0.1f).coerceAtLeast(0.0f)
     }
 }

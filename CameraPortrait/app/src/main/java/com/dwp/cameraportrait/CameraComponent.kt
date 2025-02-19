@@ -32,7 +32,6 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
     var hasCameraPermission by remember { mutableStateOf(false) }
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     var isCameraInitializing by remember { mutableStateOf(true) }
-    var camera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) } // Keep reference to camera
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -67,7 +66,7 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                                     it.surfaceProvider = currentPreviewView.surfaceProvider
                                 }
                             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                            camera = cameraProvider.bindToLifecycle(
+                            state.camera = cameraProvider.bindToLifecycle(
                                 activity,
                                 cameraSelector,
                                 preview
@@ -83,7 +82,7 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
 
             // Update zoom when zoomLevel changes
             LaunchedEffect(state.zoomLevel) {
-                camera?.let { cam ->
+                state.camera?.let { cam ->
                     val zoomState = cam.cameraInfo.zoomState.value
                     zoomState?.let {
                         val maxZoomRatio = it.maxZoomRatio
