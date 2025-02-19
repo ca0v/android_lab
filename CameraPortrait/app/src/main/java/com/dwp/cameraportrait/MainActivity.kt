@@ -1,18 +1,10 @@
 package com.dwp.cameraportrait
 
-import android.content.ContentValues
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
-import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.camera.core.ImageAnalysis
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,9 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.io.File
-import java.io.FileOutputStream
-import java.util.UUID
 import java.util.concurrent.Executors
 import com.dwp.cameraportrait.ui.theme.CameraPortraitTheme
 
@@ -54,8 +43,12 @@ class MainActivity : ComponentActivity() {
                     // log success
                     Log.d("MainActivity", "Image captured successfully")
                     super.onCaptureSuccess(image)
-                    val bitmap = image.toBitmap()
-                    saveImage(bitmap)
+                    var bitmap = image.toBitmap()
+                    val imageProcessor = ImageProcessor()
+                    bitmap = imageProcessor.convertTo400By600Pixels(bitmap, 400)
+                    //bitmap = imageProcessor.convertToGrayscale(bitmap)
+                    bitmap = imageProcessor.rotateImage(bitmap, 90f)
+                    imageProcessor.saveImage(bitmap, contentResolver)
                     image.close()
                 }
 
@@ -66,33 +59,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )
-    }
-
-    private fun saveImage(bitmap: Bitmap?) {
-        if (bitmap == null) return
-        val filename = "IMG_${UUID.randomUUID()}.jpg"
-        val fos: FileOutputStream?
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val resolver = contentResolver
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-            }
-            val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            if (imageUri != null) {
-                fos = resolver.openOutputStream(imageUri) as? FileOutputStream
-            } else {
-                fos = null
-            }
-        } else {
-            val imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val image = File(imageDir, filename)
-            fos = FileOutputStream(image)
-        }
-
-        fos?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,3 +131,5 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
