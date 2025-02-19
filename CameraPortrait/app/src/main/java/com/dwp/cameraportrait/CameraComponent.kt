@@ -2,10 +2,12 @@ package com.dwp.cameraportrait
 
 import android.Manifest
 import android.util.Log
+import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.core.ZoomState
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -66,10 +68,15 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                                     it.surfaceProvider = currentPreviewView.surfaceProvider
                                 }
                             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                            state.imageCapture = ImageCapture.Builder()
+                                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                                .setTargetRotation(Surface.ROTATION_0)
+                                .build()
                             state.camera = cameraProvider.bindToLifecycle(
                                 activity,
                                 cameraSelector,
-                                preview
+                                preview,
+                                state.imageCapture
                             )
                             isCameraInitializing = false // Camera is now initialized
                         }, ContextCompat.getMainExecutor(context))

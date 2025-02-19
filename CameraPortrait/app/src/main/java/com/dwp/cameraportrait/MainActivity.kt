@@ -2,19 +2,26 @@ package com.dwp.cameraportrait
 
 import android.content.ContentValues
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
+import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge import androidx.annotation.RequiresApi
+import androidx.activity.enableEdgeToEdge
+import androidx.camera.core.ImageAnalysis
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,13 +35,37 @@ import androidx.compose.ui.unit.dp
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import java.util.concurrent.Executors
 import com.dwp.cameraportrait.ui.theme.CameraPortraitTheme
 
 class MainActivity : ComponentActivity() {
 
-    private fun captureImage(state: CameraState): Bitmap? {
-        // return a test bitmap, 100x100
-        return Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    private fun captureImage(state: CameraState) {
+
+        // Not bound to a valid Camera
+        val imageCapture = state.imageCapture
+
+        val executor = Executors.newSingleThreadExecutor()
+
+        imageCapture.takePicture(
+            executor,
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    // log success
+                    Log.d("MainActivity", "Image captured successfully")
+                    super.onCaptureSuccess(image)
+                    val bitmap = image.toBitmap()
+                    saveImage(bitmap)
+                    image.close()
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    // log error
+                    Log.e("MainActivity", "Error capturing image", exception)
+                    super.onError(exception)
+                }
+            }
+        )
     }
 
     private fun saveImage(bitmap: Bitmap?) {
@@ -85,20 +116,24 @@ class MainActivity : ComponentActivity() {
                         {
                             CameraComponent(
                                 modifier = Modifier.fillMaxSize(),
-                                state = cameraState,
+                                state = cameraState
                             )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ){
-                            Row {
-                                Button(onClick = {
-                                    val bitmap = captureImage(cameraState)
-                                    saveImage(bitmap)
-                                }) {
-                                    Text(text = "Capture")
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Row {
+                                    Button(
+                                        onClick = {
+                                            // log that we are capturing
+                                            Log.d("MainActivity", "Capture button clicked")
+                                            // call captureImage()
+                                            captureImage(cameraState)
+                                        }
+                                    ) {
+                                        Text(text = "Capture")
+                                    }
                                 }
                                 ZoomControls(
                                     cameraState = cameraState,
@@ -113,6 +148,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     @Composable
     fun ZoomControls(cameraState: CameraState, onZoomIn: () -> Unit, onZoomOut: () -> Unit) {
@@ -129,5 +165,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
