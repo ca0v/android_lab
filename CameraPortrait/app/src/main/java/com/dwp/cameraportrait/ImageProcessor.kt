@@ -61,25 +61,18 @@ class ImageProcessor {
         val filename = "IMG_${UUID.randomUUID()}.jpg"
         val fos: FileOutputStream?
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val resolver = contentResolver
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                 put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                 put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
             }
-            val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            val imageUri =
+                contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
             if (imageUri != null) {
-                fos = resolver.openOutputStream(imageUri) as? FileOutputStream
+                fos = contentResolver.openOutputStream(imageUri) as? FileOutputStream
             } else {
                 fos = null
             }
-        } else {
-            val imageDir =
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val image = File(imageDir, filename)
-            fos = FileOutputStream(image)
-        }
 
         fos?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
     }
@@ -97,14 +90,19 @@ class ImageProcessor {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     // log success
                     Log.d("MainActivity", "Image captured successfully")
-                    super.onCaptureSuccess(image)
-                    var bitmap = image.toBitmap()
-                    bitmap = resample(bitmap, 400)
-                    bitmap = convertToGrayscale(bitmap)
-                    bitmap = rotateImage(bitmap, 90f)
-                    saveImage(bitmap, state.contentResolver)
-                    image.close()
+                    try {
+                        var bitmap = image.toBitmap()
+                        bitmap = resample(bitmap, 400)
+                        bitmap = convertToGrayscale(bitmap)
+                        bitmap = rotateImage(bitmap, 90f)
+                        saveImage(bitmap, state.contentResolver)
+                    } catch (e: Exception){
+                        Log.e("MainActivity", "Error processing image", e)
+                    } finally {
+                        image.close()
+                    }
                 }
+
 
                 override fun onError(exception: ImageCaptureException) {
                     // log error

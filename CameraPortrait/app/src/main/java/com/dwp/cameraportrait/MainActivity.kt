@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val cameraState by remember { mutableStateOf(CameraState()) }
+            cameraState.contentResolver = contentResolver
             CameraPortraitTheme {
                 MyScreenComponent(cameraState)
             }
