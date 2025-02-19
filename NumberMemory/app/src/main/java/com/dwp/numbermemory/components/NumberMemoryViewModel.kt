@@ -12,6 +12,8 @@ class NumberMemoryViewModel {
     var digits: List<Int> by mutableStateOf(emptyList())
         private set
 
+    var digitsVisibility by mutableStateOf(true)
+
     var tryAgainVisibility by mutableStateOf(false)
         private set
 
@@ -20,6 +22,8 @@ class NumberMemoryViewModel {
 
     var totalIncorrect by mutableIntStateOf(0)
         private set
+
+    var digitSize by mutableIntStateOf(6)
 
     fun updateDigits(newDigits: List<Int>) {
         digits = newDigits

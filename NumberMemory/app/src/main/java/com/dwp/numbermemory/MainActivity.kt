@@ -20,7 +20,8 @@ import com.dwp.numbermemory.components.NumberMemoryViewModel
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val model = NumberMemoryViewModel()
-        val randomDigits = RandomNumberGeneratorHelper().getRandomString(6)
+        model.digitSize = 7
+        val randomDigits = RandomNumberGeneratorHelper().getRandomString(model.digitSize)
         model.updateDigits(randomDigits.map { it.toString().toInt() });
 
         enableEdgeToEdge()

@@ -33,25 +33,23 @@ fun MyScreen(model: NumberMemoryViewModel) {
         ScoreBoardComponent(model.totalCorrect, model.totalIncorrect)
 
         // flow digits that can be modified to update the UI
-        HorizontalLayoutOfDigitTiles(digits = model.digits)
-
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth().height(80.dp)
-        ) {
+        if (model.digitsVisibility) {
+            HorizontalLayoutOfDigitTiles(digits = model.digits)
+        } else {
             HorizontalLayoutOfDigitTiles(digits = model.inputs)
         }
 
         NumberPadComponent(onKeyPressed = {
             digit -> model.addInput(digit)
-            if (model.inputs.size == 6) {
+            if (model.inputs.size == 1) model.digitsVisibility = false;
+            if (model.inputs.size == model.digitSize) {
                 val userInput = model.inputs.joinToString("")
                 model.clearInputs()
                 // does the input match the digits?
                 val digits = model.digits.joinToString("")
                 if (userInput == digits) {
                     val newDigits =
-                        RandomNumberGeneratorHelper().getRandomString(6)
+                        RandomNumberGeneratorHelper().getRandomString(model.digitSize)
                             .map { it.toString().toInt() }
                     model.updateDigits(newDigits)
                     model.setTryAgainVisible(visible = false)
@@ -60,6 +58,7 @@ fun MyScreen(model: NumberMemoryViewModel) {
                     model.setTryAgainVisible(visible = true)
                     model.incrementIncorrect()
                 }
+                model.digitsVisibility = true
             }
         })
 
@@ -72,7 +71,7 @@ fun MyScreen(model: NumberMemoryViewModel) {
             Button(
                 onClick = {
                     val newDigits =
-                        RandomNumberGeneratorHelper().getRandomString(6)
+                        RandomNumberGeneratorHelper().getRandomString(model.digitSize)
                             .map { it.toString().toInt() }
                     model.updateDigits(newDigits)
                     model.setTryAgainVisible(visible = false)
