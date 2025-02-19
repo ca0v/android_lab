@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Environment
+import android.os.VibrationEffect
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.ImageCapture
@@ -77,7 +78,7 @@ class ImageProcessor {
         fos?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
     }
 
-    fun captureImage(state: CameraState) {
+    fun captureImage(state: CameraState, onImageCaptured: (Bitmap?) -> Unit) {
 
         // Not bound to a valid Camera
         val imageCapture = state.imageCapture
@@ -96,7 +97,8 @@ class ImageProcessor {
                         bitmap = convertToGrayscale(bitmap)
                         bitmap = rotateImage(bitmap, 90f)
                         saveImage(bitmap, state.contentResolver)
-                    } catch (e: Exception){
+                        onImageCaptured(bitmap)
+                    } catch (e: Exception) {
                         Log.e("MainActivity", "Error processing image", e)
                     } finally {
                         image.close()

@@ -12,10 +12,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun MyScreenComponent(cameraState: CameraState) {
+    val haptic = LocalHapticFeedback.current
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -50,7 +53,15 @@ fun MyScreenComponent(cameraState: CameraState) {
                         onClick = {
                             // log that we are capturing
                             Log.d("MainActivity", "Capture button clicked")
-                            ImageProcessor().captureImage(cameraState)
+                            ImageProcessor().captureImage(cameraState) {
+                                bitmap ->
+                                Log.d("MainActivity", "Image captured")
+                                if (bitmap != null) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                } else {
+                                    Log.e("MainActivity", "Bitmap is null")
+                                }
+                            }
                         }
                     ) {
                         Text(text = "Capture")
