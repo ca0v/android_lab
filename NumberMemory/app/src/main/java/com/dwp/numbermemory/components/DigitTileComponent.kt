@@ -15,13 +15,3 @@ fun DigitTileComponent(
     )
 }
 
-@Composable
-fun ScoreBoardComponent(
-    totalCorrect: Int,
-    totalIncorrect: Int,
-) {
-    Text(
-        text = "Correct: $totalCorrect, Incorrect: $totalIncorrect",
-        style = androidx.compose.material3.MaterialTheme.typography.displaySmall
-    )
-}

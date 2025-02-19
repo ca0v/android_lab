@@ -1,6 +1,7 @@
 package com.dwp.numbermemory.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +40,10 @@ fun MyScreen(model: NumberMemoryViewModel) {
             HorizontalLayoutOfDigitTiles(digits = model.inputs)
         }
 
+        Box(
+          modifier = Modifier.height(50.dp)
+        )
+
         NumberPadComponent(onKeyPressed = {
             digit -> model.addInput(digit)
             if (model.inputs.size == 1) model.digitsVisibility = false;
@@ -75,6 +80,7 @@ fun MyScreen(model: NumberMemoryViewModel) {
                             .map { it.toString().toInt() }
                     model.updateDigits(newDigits)
                     model.setTryAgainVisible(visible = false)
+                    model.digitsVisibility = true
                 }
             ) {
                 Text(
