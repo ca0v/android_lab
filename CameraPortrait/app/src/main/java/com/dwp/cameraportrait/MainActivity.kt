@@ -17,7 +17,6 @@ import androidx.camera.core.ImageProxy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +73,23 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                ZoomControls(
+                                    cameraState = cameraState,
+                                    onZoomIn = { cameraState.zoomIn() },
+                                    onZoomOut = { cameraState.zoomOut() }
+                                )
+                            }
+                        }
                         PictureFrameBorder(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -81,51 +97,30 @@ class MainActivity : ComponentActivity() {
                         )
                         {
                             CameraComponent(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier.fillMaxWidth(),
                                 state = cameraState
                             )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ) {
-                                Row {
-                                    Button(
-                                        onClick = {
-                                            // log that we are capturing
-                                            Log.d("MainActivity", "Capture button clicked")
-                                            // call captureImage()
-                                            captureImage(cameraState)
-                                        }
-                                    ) {
-                                        Text(text = "Capture")
-                                    }
-                                }
-                                ZoomControls(
-                                    cameraState = cameraState,
-                                    onZoomIn = { cameraState.zoomIn() },
-                                    onZoomOut = { cameraState.zoomOut() }
-                                )
-                            }
-
                         }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Button(
+                                onClick = {
+                                    // log that we are capturing
+                                    Log.d("MainActivity", "Capture button clicked")
+                                    // call captureImage()
+                                    captureImage(cameraState)
+                                }
+                            ) {
+                                Text(text = "Capture")
+                            }
+                        }
+
                     }
-                }
-            }
-        }
-    }
-
-
-    @Composable
-    fun ZoomControls(cameraState: CameraState, onZoomIn: () -> Unit, onZoomOut: () -> Unit) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Zoom Level: ${cameraState.zoomLevel.toString().take(3)}x")
-            androidx.compose.foundation.layout.Row {
-                Button(onClick = onZoomIn) {
-                    Text("Zoom In")
-                }
-                Button(onClick = onZoomOut) {
-                    Text("Zoom Out")
                 }
             }
         }
