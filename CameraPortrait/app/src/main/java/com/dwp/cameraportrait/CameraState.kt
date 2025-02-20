@@ -9,9 +9,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 
-class CameraState(zoomLevel: Float = 0f) {
+class CameraState(zoomLevel: Float = 0f, isCameraOn: Boolean = true) {
     lateinit var imageCapture: ImageCapture
     lateinit var contentResolver: android.content.ContentResolver
+
+    var isCameraOn by mutableStateOf(isCameraOn)
 
     var bitmap by mutableStateOf<Bitmap?>(null)
 
