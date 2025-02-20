@@ -20,7 +20,7 @@ fun PictureFrameBorder(modifier: Modifier = Modifier, content: @Composable () ->
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(4f / 6f)
-            .border(width = 16.dp, color = Color.Red),
+            .border(width = 4.dp, color = Color.Red),
     ) {
             content()
     }

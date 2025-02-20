@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -53,19 +55,28 @@ fun MyScreenComponent(cameraState: CameraState) {
                         onClick = {
                             // log that we are capturing
                             Log.d("MainActivity", "Capture button clicked")
+                            cameraState.updateSnapshotTime()
+                            if (!cameraState.isCameraOn) {
+                                cameraState.isCameraOn = true
+                                Log.d("MainActivity", "Camera turned on")
+                                return@Button
+                            }
                             ImageProcessor().captureImage(cameraState) {
                                 bitmap ->
                                 Log.d("MainActivity", "Image captured")
                                 if (bitmap != null) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     cameraState.bitmap = bitmap
+                                    cameraState.updateSnapshotTime()
                                 } else {
                                     Log.e("MainActivity", "Bitmap is null")
                                 }
                             }
                         }
                     ) {
-                        Text(text = "Capture")
+                        val secondsSinceLastSnapshot = cameraState.getSecondsSinceLastSnapshot()
+                        Text(text = "Snapshot: $secondsSinceLastSnapshot s",
+                        textAlign = TextAlign.Center)
                     }
                     ZoomControls(
                         cameraState = cameraState,

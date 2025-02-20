@@ -9,10 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
-import androidx.camera.core.ZoomState
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,11 +23,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import kotlinx.coroutines.delay
+
+private const val INACTIVITY_TIMEOUT_MS = 60_000L // 1 minute in milliseconds
 
 @Composable
 fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
@@ -54,9 +61,10 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
         if (hasCameraPermission) {
             val activity = context as? ComponentActivity ?: return@Column
 
-            LaunchedEffect(key1 = previewView) { // Initialize camera
-                try {
-                    if (previewView == null) {
+            // Manage camera binding/unbinding based on isCameraOn
+            LaunchedEffect(state.isCameraOn, previewView) {
+                if (state.isCameraOn && previewView == null) {
+                    try {
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
                         cameraProviderFuture.addListener({
                             val cameraProvider = cameraProviderFuture.get()
@@ -78,13 +86,35 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                                 preview,
                                 state.imageCapture
                             )
-                            state.camera?.cameraControl!!.setZoomRatio(state.camera!!.cameraInfo.zoomState.value!!.minZoomRatio)
-                            isCameraInitializing = false // Camera is now initialized
+                            state.camera?.cameraControl!!.setZoomRatio(
+                                state.camera!!.cameraInfo.zoomState.value!!.minZoomRatio
+                            )
+                            isCameraInitializing = false
                         }, ContextCompat.getMainExecutor(context))
+                    } catch (e: Exception) {
+                        Log.e("CameraComponent", "Error initializing camera", e)
+                        isCameraInitializing = false
                     }
-                } catch (e: Exception) {
-                    Log.e("CameraComponent", "Error initializing camera", e)
-                    isCameraInitializing = false // Stop loading in case of error
+                } else if (!state.isCameraOn && previewView != null) {
+                    ProcessCameraProvider.getInstance(activity).get().unbindAll()
+                    previewView = null
+                    state.camera = null
+                    isCameraInitializing = true
+                }
+            }
+
+            // Monitor inactivity and turn off camera if no recent snapshot
+            LaunchedEffect(state.isCameraOn, state.lastSnapshotTime) {
+                if (state.isCameraOn) {
+                    while (true) {
+                        val timeSinceLastSnapshot = System.currentTimeMillis() - state.lastSnapshotTime
+                        if (timeSinceLastSnapshot >= INACTIVITY_TIMEOUT_MS) {
+                            state.isCameraOn = false
+                            Log.d("CameraComponent", "Camera turned off due to inactivity")
+                            break
+                        }
+                        delay(1000L) // Check every second
+                    }
                 }
             }
 
@@ -96,20 +126,49 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                         val maxZoomRatio = it.maxZoomRatio
                         val minZoomRatio = it.minZoomRatio
                         val calculatedZoomRatio = (minZoomRatio + (maxZoomRatio - minZoomRatio) * state.zoomLevel)
-                        Log.d("CameraComponent", "Calculated zoom ratio: $calculatedZoomRatio, which is between $minZoomRatio and $maxZoomRatio")
-
+                        Log.d(
+                            "CameraComponent",
+                            "Calculated zoom ratio: $calculatedZoomRatio, between $minZoomRatio and $maxZoomRatio"
+                        )
                         cam.cameraControl.setZoomRatio(calculatedZoomRatio)
                         state.zoomRatio = calculatedZoomRatio
                     }
                 }
             }
 
-            if (isCameraInitializing) {
-                Text("Loading Camera...")
+            if (state.isCameraOn) {
+                if (isCameraInitializing) {
+                    Text("Loading Camera...")
+                } else {
+                    previewView?.let { pv ->
+                        AndroidView(
+                            factory = { pv },
+                            modifier = Modifier
+                                .pointerInput(Unit) {
+                                    detectTapGestures {
+                                        if (!state.isCameraOn) {
+                                            state.isCameraOn = true
+                                            Log.d("CameraComponent", "Camera turned on by tap")
+                                        }
+                                    }
+                                }
+                        )
+                    } ?: Text("Camera Initialization Failed")
+                }
             } else {
-                previewView?.let { pv ->
-                    AndroidView({ pv })
-                } ?: Text("Camera Initialization Failed")
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures {
+                                state.isCameraOn = true
+                                Log.d("CameraComponent", "Camera turned on by tap")
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Camera is off (tap to turn on)")
+                }
             }
         } else {
             Button(onClick = { launcher.launch(cameraPermission) }) {
