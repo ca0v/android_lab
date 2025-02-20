@@ -32,8 +32,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import kotlinx.coroutines.delay
 
-private const val INACTIVITY_TIMEOUT_MS = 60_000L // 1 minute in milliseconds
-
 @Composable
 fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
     val context = LocalContext.current
@@ -146,6 +144,7 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                             modifier = Modifier
                                 .pointerInput(Unit) {
                                     detectTapGestures {
+                                        state.updateSnapshotTime()
                                         if (!state.isCameraOn) {
                                             state.isCameraOn = true
                                             Log.d("CameraComponent", "Camera turned on by tap")
@@ -162,6 +161,7 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                         .pointerInput(Unit) {
                             detectTapGestures {
                                 state.isCameraOn = true
+                                state.updateSnapshotTime()
                                 Log.d("CameraComponent", "Camera turned on by tap")
                             }
                         },

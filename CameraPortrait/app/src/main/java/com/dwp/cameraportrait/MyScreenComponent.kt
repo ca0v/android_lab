@@ -1,17 +1,21 @@
 package com.dwp.cameraportrait
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -21,6 +25,19 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun MyScreenComponent(cameraState: CameraState) {
     val haptic = LocalHapticFeedback.current
+    val secondsSinceLastSnapshotState = remember { mutableStateOf(cameraState.getSecondsUntilShutdown()) }
+
+    LaunchedEffect(Unit) {
+        val handler = Handler(Looper.getMainLooper())
+        val runnable = object : Runnable {
+            override fun run() {
+                secondsSinceLastSnapshotState.value = cameraState.getSecondsUntilShutdown()
+                handler.postDelayed(this, 1000)
+            }
+        }
+        handler.post(runnable)
+    }
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -74,9 +91,12 @@ fun MyScreenComponent(cameraState: CameraState) {
                             }
                         }
                     ) {
-                        val secondsSinceLastSnapshot = cameraState.getSecondsSinceLastSnapshot()
-                        Text(text = "Snapshot: $secondsSinceLastSnapshot s",
-                        textAlign = TextAlign.Center)
+                        Text(
+                            text = if (!cameraState.isCameraOn) {
+                                "Power On"
+                            } else {
+                                "Snapshot"
+                            }, textAlign = TextAlign.Center)
                     }
                     ZoomControls(
                         cameraState = cameraState,
