@@ -5,13 +5,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,10 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.unit.dp
 import com.dwp.cameraportrait.ui.theme.CameraPortraitTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,8 +35,10 @@ class MainActivity : ComponentActivity() {
             val cameraState by remember { mutableStateOf(CameraState()) }
             cameraState.contentResolver = contentResolver
             CameraPortraitTheme {
-                MyScreenComponent(cameraState)
-                BitmapComponent(cameraState.bitmap)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    MyScreenComponent(cameraState)
+                    BitmapComponent(cameraState.bitmap)
+                }
             }
         }
     }
@@ -39,27 +46,48 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun BitmapComponent(bitmap: Bitmap?) {
-    // Observe the bitmap reactively
+    val isExpanded = remember { mutableStateOf(false) }
+    val sizeAnim = remember { Animatable(initialValue = 50f) } // Initial size of small icon
 
-    // Render the bitmap if it exists
+    // Trigger animation when bitmap changes
+    LaunchedEffect(bitmap) {
+        if (bitmap != null) {
+            isExpanded.value = true
+            sizeAnim.snapTo(1000f) // Large value to represent fullscreen
+            delay(1000) // Wait 1 second
+            isExpanded.value = false
+            sizeAnim.animateTo(
+                targetValue = 50f, // Small icon size
+                animationSpec = tween(durationMillis = 300)
+            )
+        }
+    }
+
     bitmap?.let { bmp ->
-        Image(
-            bitmap = bmp.asImageBitmap(),
-            contentDescription = "Camera capture",
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f) // Maintain aspect ratio, adjust as needed
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = if (isExpanded.value) Alignment.Center
+            else Alignment.BottomEnd
+        ) {
+            Image(
+                bitmap = bmp.asImageBitmap(),
+                contentDescription = "Camera capture",
+                modifier = Modifier
+                    .then(
+                        if (isExpanded.value) Modifier.fillMaxSize()
+                        else Modifier.size(sizeAnim.value.dp)
+                    )
+            )
+        }
     } ?: run {
-        // Optional: Show placeholder when bitmap is null
+        // Placeholder when no bitmap
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
+                .size(50.dp)
                 .background(Color.Gray),
             contentAlignment = Alignment.Center
         ) {
-            Text("No image captured")
+            Text("No image")
         }
     }
 }
