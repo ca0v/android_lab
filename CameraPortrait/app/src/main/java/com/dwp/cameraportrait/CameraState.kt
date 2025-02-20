@@ -1,5 +1,6 @@
 package com.dwp.cameraportrait
 
+import android.graphics.Bitmap
 import androidx.camera.core.ImageCapture
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -11,6 +12,8 @@ import androidx.core.content.ContextCompat
 class CameraState(zoomLevel: Float = 0f) {
     lateinit var imageCapture: ImageCapture
     lateinit var contentResolver: android.content.ContentResolver
+
+    var bitmap by mutableStateOf<Bitmap?>(null)
 
     var camera by mutableStateOf<androidx.camera.core.Camera?>(null)
 

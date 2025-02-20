@@ -58,6 +58,7 @@ fun MyScreenComponent(cameraState: CameraState) {
                                 Log.d("MainActivity", "Image captured")
                                 if (bitmap != null) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    cameraState.bitmap = bitmap
                                 } else {
                                     Log.e("MainActivity", "Bitmap is null")
                                 }

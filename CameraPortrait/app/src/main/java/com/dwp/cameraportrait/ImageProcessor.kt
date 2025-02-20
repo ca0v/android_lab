@@ -93,11 +93,11 @@ class ImageProcessor {
                     Log.d("MainActivity", "Image captured successfully")
                     try {
                         var bitmap = image.toBitmap()
+                        onImageCaptured(bitmap)
                         bitmap = resample(bitmap, 400)
                         bitmap = convertToGrayscale(bitmap)
                         bitmap = rotateImage(bitmap, 90f)
                         saveImage(bitmap, state.contentResolver)
-                        onImageCaptured(bitmap)
                     } catch (e: Exception) {
                         Log.e("MainActivity", "Error processing image", e)
                     } finally {
