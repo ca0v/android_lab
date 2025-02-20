@@ -27,6 +27,17 @@ class MainActivity : ComponentActivity() {
                 }
                 BitmapComponent(cameraState.bitmap)
             }
+            Button(onClick = {
+                cameraState.updateSnapshotTime()
+                if (cameraState.isCameraOn) {
+                    cameraState.isCameraOn = false
+                } else {
+                    cameraState.toggleCamera()
+                    cameraState.isCameraOn = true
+                }
+            }) {
+                Text("Toggle Camera")
+            }
         }
     }
 }

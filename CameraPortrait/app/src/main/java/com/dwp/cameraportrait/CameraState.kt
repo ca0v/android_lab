@@ -11,11 +11,12 @@ import androidx.compose.runtime.setValue
 
 const val INACTIVITY_TIMEOUT_MS = 10_000L // 1 minute in milliseconds
 
-class CameraState(zoomLevel: Float = 0f, isCameraOn: Boolean = true) {
+class CameraState(zoomLevel: Float = 0f) {
     lateinit var imageCapture: ImageCapture
     lateinit var contentResolver: android.content.ContentResolver
 
-    var isCameraOn by mutableStateOf(isCameraOn)
+    var isCameraOn by mutableStateOf(true)
+    var isFrontCamera by mutableStateOf(true)
 
     var bitmap by mutableStateOf<Bitmap?>(null)
 
@@ -49,5 +50,9 @@ class CameraState(zoomLevel: Float = 0f, isCameraOn: Boolean = true) {
         if (lastSnapshotTime == 0L) return 0L
         val timeUntilShutdown = INACTIVITY_TIMEOUT_MS - (System.currentTimeMillis() - lastSnapshotTime)
         return (timeUntilShutdown / 1000L)
+    }
+
+    fun toggleCamera() {
+        isFrontCamera = !isFrontCamera
     }
 }

@@ -59,13 +59,18 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
         if (hasCameraPermission) {
             val activity = context as? ComponentActivity ?: return@Column
 
-            // Manage camera binding/unbinding based on isCameraOn
-            LaunchedEffect(state.isCameraOn, previewView) {
+            // Manage camera binding/unbinding based on isCameraOn and isFrontCamera
+            LaunchedEffect(state.isCameraOn, state.isFrontCamera, previewView) {
                 if (state.isCameraOn && previewView == null) {
                     try {
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
                         cameraProviderFuture.addListener({
                             val cameraProvider = cameraProviderFuture.get()
+                            // Unbind existing camera if switching
+                            if (previewView != null) {
+                                cameraProvider.unbindAll()
+                                previewView = null
+                            }
                             val currentPreviewView = PreviewView(context)
                             previewView = currentPreviewView
                             val preview = Preview.Builder()
@@ -73,7 +78,11 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                                 .also {
                                     it.surfaceProvider = currentPreviewView.surfaceProvider
                                 }
-                            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                            val cameraSelector = if (state.isFrontCamera) {
+                                CameraSelector.DEFAULT_FRONT_CAMERA
+                            } else {
+                                CameraSelector.DEFAULT_BACK_CAMERA
+                            }
                             state.imageCapture = ImageCapture.Builder()
                                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                                 .setTargetRotation(Surface.ROTATION_0)
