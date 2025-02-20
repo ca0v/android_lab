@@ -22,8 +22,8 @@ class MainActivity : ComponentActivity() {
             CameraPortraitTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     MyScreenComponent(cameraState)
-                    BitmapComponent(cameraState.bitmap)
                 }
+                BitmapComponent(cameraState.bitmap)
             }
         }
     }
