@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,41 +23,55 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
+private const val COLLAPSED_SIZE = 50f
+private const val EXPANDED_SIZE = 1000f
+private const val ANIMATION_DURATION_MS = 300
+private const val INITIAL_EXPANSION_DURATION_MS = 1000
+private val PADDING_TOP = 32.dp
+private val PADDING_END = 16.dp
+private const val ROTATION_DEGREES = 90f
+
 @Composable
-fun BitmapComponent(bitmap: Bitmap?) {
+fun BitmapComponent(
+    bitmap: Bitmap?,
+    modifier: Modifier = Modifier
+) {
     var isExpanded by remember { mutableStateOf(false) }
     val targetSize by animateFloatAsState(
-        targetValue = if (isExpanded) 1000f else 50f,
-        animationSpec = tween(durationMillis = 300),
-        label = "sizeAnimation"
+        targetValue = if (isExpanded) EXPANDED_SIZE else COLLAPSED_SIZE,
+        animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
+        label = "bitmapSizeAnimation"
     )
 
     // Handle initial expansion when bitmap first appears
     LaunchedEffect(bitmap) {
-        if (bitmap != null && targetSize == 50f) {
+        if (bitmap != null && targetSize == COLLAPSED_SIZE) {
             isExpanded = true
-            delay(1000)
+            delay(INITIAL_EXPANSION_DURATION_MS.toLong())
             isExpanded = false
         }
     }
 
-    bitmap?.let { bmp ->
+    if (bitmap != null) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize(),
             contentAlignment = if (isExpanded) Alignment.Center else Alignment.TopEnd
         ) {
             Image(
-                bitmap = bmp.asImageBitmap(),
+                bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Camera capture",
                 modifier = Modifier
                     .then(
                         if (isExpanded) Modifier.fillMaxSize()
                         else Modifier
                             .size(targetSize.dp)
-                            .padding(top = 16.dp, end = 16.dp)
+                            .padding(top = PADDING_TOP, end = PADDING_END)
                     )
-                    .graphicsLayer(rotationZ = 90f)
-                    .clickable { isExpanded = !isExpanded }
+                    .graphicsLayer(rotationZ = ROTATION_DEGREES)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null // No ripple effect, customize if needed
+                    ) { isExpanded = !isExpanded }
             )
         }
     }
