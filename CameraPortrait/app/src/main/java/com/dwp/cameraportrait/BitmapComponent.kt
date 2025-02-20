@@ -13,20 +13,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun BitmapComponent(bitmap: Bitmap?) {
     val isExpanded = remember { mutableStateOf(false) }
     val sizeAnim = remember { Animatable(initialValue = 50f) }
-    val coroutineScope = rememberCoroutineScope()
 
     // Handle initial bitmap appearance
     LaunchedEffect(bitmap) {
@@ -35,6 +32,21 @@ fun BitmapComponent(bitmap: Bitmap?) {
             sizeAnim.snapTo(1000f)
             delay(1000)
             isExpanded.value = false
+            sizeAnim.animateTo(
+                targetValue = 50f,
+                animationSpec = tween(durationMillis = 300)
+            )
+        }
+    }
+
+    // Handle size animation based on isExpanded state
+    LaunchedEffect(isExpanded.value) {
+        if (isExpanded.value) {
+            sizeAnim.animateTo(
+                targetValue = 1000f,
+                animationSpec = tween(durationMillis = 300)
+            )
+        } else {
             sizeAnim.animateTo(
                 targetValue = 50f,
                 animationSpec = tween(durationMillis = 300)
@@ -54,28 +66,16 @@ fun BitmapComponent(bitmap: Bitmap?) {
                 modifier = Modifier
                     .then(
                         if (isExpanded.value) Modifier.fillMaxSize()
-                        else Modifier.size(sizeAnim.value.dp)
+                        else Modifier
+                            .size(sizeAnim.value.dp)
+                            .padding(bottom = 16.dp)
                     )
                     .graphicsLayer {
                         rotationZ = 90f
                     }
                     .clickable {
-                        // Toggle between expanded and collapsed states
-                        coroutineScope.launch {
-                            if (isExpanded.value) {
-                                isExpanded.value = false
-                                sizeAnim.animateTo(
-                                    targetValue = 50f,
-                                    animationSpec = tween(durationMillis = 300)
-                                )
-                            } else {
-                                isExpanded.value = true
-                                sizeAnim.animateTo(
-                                    targetValue = 1000f,
-                                    animationSpec = tween(durationMillis = 300)
-                                )
-                            }
-                        }
+                        // Just toggle the state, animation handled separately
+                        isExpanded.value = !isExpanded.value
                     }
             )
         }
