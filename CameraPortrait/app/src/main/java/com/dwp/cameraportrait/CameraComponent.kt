@@ -78,6 +78,7 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                                 preview,
                                 state.imageCapture
                             )
+                            state.camera?.cameraControl!!.setZoomRatio(state.camera!!.cameraInfo.zoomState.value!!.minZoomRatio)
                             isCameraInitializing = false // Camera is now initialized
                         }, ContextCompat.getMainExecutor(context))
                     }
@@ -95,8 +96,10 @@ fun CameraComponent(modifier: Modifier = Modifier, state: CameraState) {
                         val maxZoomRatio = it.maxZoomRatio
                         val minZoomRatio = it.minZoomRatio
                         val calculatedZoomRatio = (minZoomRatio + (maxZoomRatio - minZoomRatio) * state.zoomLevel)
+                        Log.d("CameraComponent", "Calculated zoom ratio: $calculatedZoomRatio, which is between $minZoomRatio and $maxZoomRatio")
 
                         cam.cameraControl.setZoomRatio(calculatedZoomRatio)
+                        state.zoomRatio = calculatedZoomRatio
                     }
                 }
             }

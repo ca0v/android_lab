@@ -14,8 +14,11 @@ class CameraState(zoomLevel: Float = 0f) {
 
     var camera by mutableStateOf<androidx.camera.core.Camera?>(null)
 
+    var zoomRatio by mutableFloatStateOf(zoomLevel)
+
     var zoomLevel by mutableFloatStateOf(zoomLevel)
         private set
+
     fun zoomIn() {
         zoomLevel = (zoomLevel + 0.1f).coerceAtMost(1.0f)
     }

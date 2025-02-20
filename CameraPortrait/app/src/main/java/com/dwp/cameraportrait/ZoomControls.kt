@@ -30,7 +30,7 @@ fun ZoomControls(cameraState: CameraState, onZoomIn: () -> Unit, onZoomOut: () -
             }
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = "x${(cameraState.zoomLevel * 10).roundToInt()}"
+                text = "x${(cameraState.zoomRatio)}"
             )
             Button(
                 modifier = Modifier.padding(8.dp),
