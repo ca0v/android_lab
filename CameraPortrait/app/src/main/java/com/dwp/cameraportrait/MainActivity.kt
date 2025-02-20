@@ -6,8 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,17 +25,7 @@ class MainActivity : ComponentActivity() {
                 }
                 BitmapComponent(cameraState.bitmap)
             }
-            Button(onClick = {
-                cameraState.updateSnapshotTime()
-                if (cameraState.isCameraOn) {
-                    cameraState.isCameraOn = false
-                } else {
-                    cameraState.toggleCamera()
-                    cameraState.isCameraOn = true
-                }
-            }) {
-                Text("Toggle Camera")
-            }
+            ToggleCameraButton(cameraState)
         }
     }
 }
