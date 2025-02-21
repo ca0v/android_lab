@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            capturedBitmap = result.data?.extras?.get("data") as? Bitmap
+            capturedBitmap = result.data?.extras?.getParcelable("data") as? Bitmap
         }
     }
 
